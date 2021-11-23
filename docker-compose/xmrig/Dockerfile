@@ -4,18 +4,21 @@ RUN set -e && \
     apt-get update -q -y --no-install-recommends && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -q -y --no-install-recommends \
         git \
+        wget \
         build-essential \
         ca-certificates \
         cmake \
-        libuv1-dev \
-        libssl-dev \
-        libhwloc-dev
+        automake \
+        libtool \
+        autoconf
 
 WORKDIR /usr/src
 RUN git clone https://github.com/xmrig/xmrig.git && \
     mkdir xmrig/build && \
-    cd xmrig/build && \
-    cmake .. && \
+    cd xmrig/scripts && \
+    bash ./build_deps.sh && \
+    cd ../build && \
+    cmake .. -DXMRIG_DEPS=scripts/deps && \
     make -j$(nproc)
 
 # ---
@@ -26,11 +29,6 @@ COPY --from=0 /usr/src/xmrig/build/xmrig /
 
 RUN set -e && \
     apt-get update -q -y --no-install-recommends && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install -q -y --no-install-recommends \
-    libssl1.1 \
-    libcrypto++6 \
-    libhwloc15 \
-      && \
     apt-get clean
 
 WORKDIR /
